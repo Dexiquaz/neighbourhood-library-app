@@ -53,15 +53,28 @@ class _AddBookPageState extends State<AddBookPage> {
         children: [
           TextField(
             controller: _titleController,
-            decoration: const InputDecoration(labelText: 'Title'),
+            style: TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Title',
+              labelStyle: TextStyle(color: Colors.white),
+            ),
           ),
           TextField(
             controller: _authorController,
-            decoration: const InputDecoration(labelText: 'Author'),
+            style: TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Author',
+              labelStyle: TextStyle(color: Colors.white),
+            ),
           ),
           TextField(
             controller: _isbnController,
-            decoration: const InputDecoration(labelText: 'ISBN'),
+            style: TextStyle(color: Colors.white),
+
+            decoration: const InputDecoration(
+              labelText: 'ISBN',
+              labelStyle: TextStyle(color: Colors.white),
+            ),
           ),
           const SizedBox(height: 24),
           PrimaryButton(

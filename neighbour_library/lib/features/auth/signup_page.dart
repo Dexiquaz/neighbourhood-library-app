@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../services/auth_service.dart';
 
 class SignupPage extends StatefulWidget {
@@ -17,12 +19,33 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _signup() async {
     setState(() => _loading = true);
+
     try {
+      // 1️⃣ Create auth user
       await _auth.signup(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      // 2️⃣ Get the newly created user
+      final user = Supabase.instance.client.auth.currentUser;
+
+      if (user == null) {
+        throw Exception('User not created');
+      }
+
+      // 3️⃣ Create profile row (CRITICAL)
+      await Supabase.instance.client.from('profiles').insert({
+        'id': user.id,
+        'name': _emailController.text.split('@')[0], // temp name
+        'latitude': 0.0, // GPS later
+        'longitude': 0.0, // GPS later
+        'locality': 'Unknown',
+      });
+
       if (!mounted) return;
+
+      // 4️⃣ Go back to login page
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;

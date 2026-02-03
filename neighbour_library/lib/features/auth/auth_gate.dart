@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_page.dart';
-import '../../main.dart';
-import '../library/my_library_page.dart';
+import '../explore/explore_page.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -15,7 +14,7 @@ class AuthGate extends StatelessWidget {
         final session = Supabase.instance.client.auth.currentSession;
 
         if (session != null) {
-          return const MyLibraryPage();
+          return const ExplorePage();
         } else {
           return const LoginPage();
         }

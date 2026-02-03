@@ -17,10 +17,19 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A), // dark base
       appBar: AppBar(
-        title: Text(title),
         backgroundColor: const Color(0xFF0F172A),
         elevation: 0,
+        titleSpacing: 16,
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
       ),
+
       body: Padding(padding: const EdgeInsets.all(16), child: body),
       floatingActionButton: floatingActionButton,
     );

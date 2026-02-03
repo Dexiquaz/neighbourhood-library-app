@@ -1,0 +1,134 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../ui/app_scaffold.dart';
+import '../../ui/book_card.dart';
+import '../../ui/empty_state.dart';
+import '../../services/location_service.dart';
+import 'package:geolocator/geolocator.dart';
+
+class ExplorePage extends StatefulWidget {
+  const ExplorePage({super.key});
+
+  @override
+  State<ExplorePage> createState() => _ExplorePageState();
+}
+
+class _ExplorePageState extends State<ExplorePage> {
+  final _client = Supabase.instance.client;
+
+  static const double _radiusKm = 3.0;
+
+  Future<void> _updateLocation() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final position = await LocationService().getCurrentLocation();
+
+      await _client
+          .from('profiles')
+          .update({
+            'latitude': position.latitude,
+            'longitude': position.longitude,
+          })
+          .eq('id', user.id);
+    } catch (e) {
+      // Location errors should NOT crash Explore
+      debugPrint('Location error: $e');
+    }
+  }
+
+  double _distanceInKm(double lat1, double lon1, double lat2, double lon2) {
+    return Geolocator.distanceBetween(lat1, lon1, lat2, lon2) / 1000;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _updateLocation();
+    _fetchBooks();
+  }
+
+  List<dynamic> _books = [];
+  bool _loading = true;
+
+  Future<void> _fetchBooks() async {
+    final userId = _client.auth.currentUser!.id;
+    final myProfile = await _client
+        .from('profiles')
+        .select('latitude, longitude')
+        .eq('id', userId)
+        .single();
+
+    final myLat = (myProfile['latitude'] as num).toDouble();
+    final myLng = (myProfile['longitude'] as num).toDouble();
+
+    final data = await _client
+        .from('books')
+        .select('''
+      id,
+      title,
+      author,
+      owner_id,
+      profiles!books_owner_id_fkey (
+        latitude,
+        longitude
+      )
+    ''')
+        .neq('owner_id', userId)
+        .eq('status', 'available')
+        .order('created_at', ascending: false);
+
+    if (!mounted) return;
+
+    final booksWithDistance = data
+        .map((book) {
+          final ownerProfile = book['profiles'];
+          if (ownerProfile == null) return null;
+
+          final ownerLat = (ownerProfile['latitude'] as num).toDouble();
+          final ownerLng = (ownerProfile['longitude'] as num).toDouble();
+
+          final distance = _distanceInKm(myLat, myLng, ownerLat, ownerLng);
+
+          book['distance'] = distance;
+          return book;
+        })
+        .whereType<Map<String, dynamic>>()
+        .where((book) => book['distance'] <= _radiusKm) // 🔑 FILTER
+        .toList();
+
+    // Optional but recommended: nearest first
+    booksWithDistance.sort((a, b) => a['distance'].compareTo(b['distance']));
+
+    setState(() {
+      _books = booksWithDistance;
+      _loading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScaffold(
+      title: 'Explore Books',
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _books.isEmpty
+          ? const EmptyState(message: 'No books available nearby')
+          : ListView.builder(
+              itemCount: _books.length,
+              itemBuilder: (context, index) {
+                final book = _books[index];
+                return BookCard(
+                  title: book['title'],
+                  author: book['author'] ?? 'Unknown author',
+                  subtitle: Text(
+                    '${book['distance'].toStringAsFixed(1)} km away',
+                    style: const TextStyle(color: Colors.white54),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
