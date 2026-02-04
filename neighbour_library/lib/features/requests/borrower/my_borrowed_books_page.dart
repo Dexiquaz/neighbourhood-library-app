@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../ui/app_scaffold.dart';
-import '../../ui/book_card.dart';
-import '../../ui/empty_state.dart';
+import '../../../ui/app_scaffold.dart';
+import '../../../ui/book_card.dart';
+import '../../../ui/empty_state.dart';
 
 class MyBorrowedBooksPage extends StatefulWidget {
   const MyBorrowedBooksPage({super.key});

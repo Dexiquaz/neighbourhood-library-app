@@ -4,12 +4,14 @@ class AppScaffold extends StatelessWidget {
   final String title;
   final Widget body;
   final Widget? floatingActionButton;
+  final PreferredSizeWidget? bottom; // 🔑 ADD THIS
 
   const AppScaffold({
     super.key,
     required this.title,
     required this.body,
     this.floatingActionButton,
+    this.bottom,
   });
 
   @override
@@ -28,8 +30,8 @@ class AppScaffold extends StatelessWidget {
             fontSize: 20,
           ),
         ),
+        bottom: bottom, // 🔑 PASS THROUGH
       ),
-
       body: Padding(padding: const EdgeInsets.all(16), child: body),
       floatingActionButton: floatingActionButton,
     );

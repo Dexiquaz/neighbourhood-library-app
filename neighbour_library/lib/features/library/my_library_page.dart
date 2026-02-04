@@ -4,7 +4,7 @@ import '../../ui/app_scaffold.dart';
 import '../../ui/book_card.dart';
 import '../../ui/empty_state.dart';
 import 'add_book_page.dart';
-import '../requests/my_borrowed_books_page.dart';
+import '../requests/borrower/my_borrowed_books_page.dart';
 
 class MyLibraryPage extends StatefulWidget {
   const MyLibraryPage({super.key});
