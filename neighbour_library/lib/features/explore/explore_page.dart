@@ -150,27 +150,38 @@ class _ExplorePageState extends State<ExplorePage> {
       title: 'Explore Books',
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchBooks,
-              child: _books.isEmpty
-                  ? ListView(
-                      children: const [
-                        EmptyState(message: 'No books available nearby'),
-                      ],
-                    )
-                  : ListView.builder(
-                      itemCount: _books.length,
-                      itemBuilder: (context, index) {
-                        final book = _books[index];
-                        return BookCard(
-                          title: book['title'],
-                          author: book['author'] ?? 'Unknown author',
-                          subtitle: Text(
-                            '${book['distance'].toStringAsFixed(1)} km away',
-                          ),
-                        );
-                      },
-                    ),
+          : _books.isEmpty
+          ? const EmptyState(message: 'No books available nearby')
+          : ListView.builder(
+              itemCount: _books.length,
+              itemBuilder: (context, index) {
+                final book = _books[index];
+
+                final alreadyRequested = _requestedBookIds.contains(book['id']);
+                return BookCard(
+                  title: book['title'],
+                  author: book['author'] ?? 'Unknown author',
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${book['distance'].toStringAsFixed(1)} km away',
+                        style: const TextStyle(color: Colors.white54),
+                      ),
+                      const SizedBox(height: 8),
+                      alreadyRequested
+                          ? const Chip(
+                              label: Text('Pending'),
+                              backgroundColor: Colors.orange,
+                            )
+                          : ElevatedButton(
+                              onPressed: () => _requestBorrow(book),
+                              child: const Text('Request Borrow'),
+                            ),
+                    ],
+                  ),
+                );
+              },
             ),
     );
   }
