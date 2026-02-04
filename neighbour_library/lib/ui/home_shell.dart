@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../features/explore/explore_page.dart';
 import '../features/library/my_library_page.dart';
-import '../features/requests/owner_requests_page.dart';
+import '../features/requests/owner/owner_requests_page.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
