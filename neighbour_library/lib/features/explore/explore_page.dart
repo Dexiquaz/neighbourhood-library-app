@@ -18,6 +18,42 @@ class _ExplorePageState extends State<ExplorePage> {
 
   static const double _radiusKm = 3.0;
 
+  Future<void> _requestBorrow(Map<String, dynamic> book) async {
+    final userId = _client.auth.currentUser!.id;
+
+    try {
+      await _client.from('borrow_requests').insert({
+        'book_id': book['id'],
+        'borrower_id': userId,
+        'owner_id': book['owner_id'],
+        'status': 'pending',
+      });
+
+      setState(() {
+        _requestedBookIds.add(book['id']);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<void> _fetchMyRequests() async {
+    final userId = _client.auth.currentUser!.id;
+
+    final data = await _client
+        .from('borrow_requests')
+        .select('book_id')
+        .eq('borrower_id', userId)
+        .eq('status', 'pending');
+
+    for (final row in data) {
+      _requestedBookIds.add(row['book_id']);
+    }
+  }
+
   Future<void> _updateLocation() async {
     final user = _client.auth.currentUser;
     if (user == null) return;
@@ -46,11 +82,12 @@ class _ExplorePageState extends State<ExplorePage> {
   void initState() {
     super.initState();
     _updateLocation();
-    _fetchBooks();
+    _fetchMyRequests().then((_) => _fetchBooks());
   }
 
   List<dynamic> _books = [];
   bool _loading = true;
+  final Set<String> _requestedBookIds = {};
 
   Future<void> _fetchBooks() async {
     final userId = _client.auth.currentUser!.id;
@@ -113,21 +150,27 @@ class _ExplorePageState extends State<ExplorePage> {
       title: 'Explore Books',
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _books.isEmpty
-          ? const EmptyState(message: 'No books available nearby')
-          : ListView.builder(
-              itemCount: _books.length,
-              itemBuilder: (context, index) {
-                final book = _books[index];
-                return BookCard(
-                  title: book['title'],
-                  author: book['author'] ?? 'Unknown author',
-                  subtitle: Text(
-                    '${book['distance'].toStringAsFixed(1)} km away',
-                    style: const TextStyle(color: Colors.white54),
-                  ),
-                );
-              },
+          : RefreshIndicator(
+              onRefresh: _fetchBooks,
+              child: _books.isEmpty
+                  ? ListView(
+                      children: const [
+                        EmptyState(message: 'No books available nearby'),
+                      ],
+                    )
+                  : ListView.builder(
+                      itemCount: _books.length,
+                      itemBuilder: (context, index) {
+                        final book = _books[index];
+                        return BookCard(
+                          title: book['title'],
+                          author: book['author'] ?? 'Unknown author',
+                          subtitle: Text(
+                            '${book['distance'].toStringAsFixed(1)} km away',
+                          ),
+                        );
+                      },
+                    ),
             ),
     );
   }
