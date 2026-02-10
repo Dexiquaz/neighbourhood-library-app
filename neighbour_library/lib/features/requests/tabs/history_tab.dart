@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../ui/book_card.dart';
 import '../../../ui/empty_state.dart';
+import 'package:neighbour_library/ui/status_chip.dart';
 
-class OwnerHistoryTab extends StatefulWidget {
-  const OwnerHistoryTab({super.key});
+class HistoryTab extends StatefulWidget {
+  const HistoryTab({super.key});
 
   @override
-  State<OwnerHistoryTab> createState() => _OwnerHistoryTabState();
+  State<HistoryTab> createState() => _HistoryTabState();
 }
 
-class _OwnerHistoryTabState extends State<OwnerHistoryTab> {
+class _HistoryTabState extends State<HistoryTab> {
   final _client = Supabase.instance.client;
+  List<dynamic> _items = [];
   bool _loading = true;
-  List<dynamic> _history = [];
 
   @override
   void initState() {
@@ -28,45 +29,34 @@ class _OwnerHistoryTabState extends State<OwnerHistoryTab> {
         .from('borrow_requests')
         .select('''
           status,
-          books (
-            title,
-            author
-          )
+          books ( title, author )
         ''')
-        .eq('owner_id', userId)
+        .or('owner_id.eq.$userId,borrower_id.eq.$userId')
         .inFilter('status', ['completed', 'rejected'])
         .order('created_at', ascending: false);
 
     if (!mounted) return;
     setState(() {
-      _history = data;
+      _items = data;
       _loading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_history.isEmpty) {
-      return const EmptyState(message: 'No past requests');
-    }
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_items.isEmpty) return const EmptyState(message: 'No history');
 
     return ListView.builder(
-      itemCount: _history.length,
+      itemCount: _items.length,
       itemBuilder: (_, i) {
-        final r = _history[i];
+        final r = _items[i];
         final book = r['books'];
 
         return BookCard(
           title: book['title'],
           author: book['author'] ?? '',
-          subtitle: Text(
-            r['status'].toString().toUpperCase(),
-            style: const TextStyle(color: Colors.white54),
-          ),
+          subtitle: StatusChip(label: r['status'], color: Colors.white70),
         );
       },
     );
