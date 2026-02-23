@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../ui/app_scaffold.dart';
-import '../../ui/primary_button.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -14,12 +13,12 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final _client = Supabase.instance.client;
   final _auth = AuthService();
-  
+
   bool _loading = true;
   bool _editMode = false;
-  
+
   Map<String, dynamic>? _profile;
-  
+
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   String? _selectedGender;
@@ -42,7 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final userId = _client.auth.currentUser!.id;
-      
+
       final data = await _client
           .from('profiles')
           .select()
@@ -57,9 +56,9 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading profile: $e')));
       }
     } finally {
       setState(() => _loading = false);
@@ -71,17 +70,20 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       final userId = _client.auth.currentUser!.id;
-      
-      await _client.from('profiles').update({
-        'name': _nameController.text.trim(),
-        'age': int.tryParse(_ageController.text.trim()),
-        'gender': _selectedGender,
-      }).eq('id', userId);
+
+      await _client
+          .from('profiles')
+          .update({
+            'name': _nameController.text.trim(),
+            'age': int.tryParse(_ageController.text.trim()),
+            'gender': _selectedGender,
+          })
+          .eq('id', userId);
 
       setState(() => _editMode = false);
-      
+
       await _fetchProfile();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
@@ -89,9 +91,9 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving profile: $e')));
       }
     } finally {
       setState(() => _loading = false);
@@ -153,9 +155,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: const Icon(Icons.camera_alt, color: Colors.white),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Photo upload coming soon!'),
-                    ),
+                    const SnackBar(content: Text('Photo upload coming soon!')),
                   );
                 },
               ),
@@ -186,42 +186,85 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             _buildProfilePicture(),
             const SizedBox(height: 32),
-            
+
             // Name
             TextField(
               controller: _nameController,
               enabled: _editMode,
+              style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Name',
-                prefixIcon: const Icon(Icons.person),
-                border: const OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.white70),
+                prefixIcon: const Icon(Icons.person, color: Colors.white54),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade700),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white12),
+                ),
                 filled: !_editMode,
+                fillColor: !_editMode ? Colors.white10 : null,
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Age
             TextField(
               controller: _ageController,
               enabled: _editMode,
               keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Age',
-                prefixIcon: const Icon(Icons.cake),
-                border: const OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.white70),
+                prefixIcon: const Icon(Icons.cake, color: Colors.white54),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade700),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white12),
+                ),
                 filled: !_editMode,
+                fillColor: !_editMode ? Colors.white10 : null,
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Gender
             DropdownButtonFormField<String>(
-              value: _selectedGender,
+              initialValue: _selectedGender,
+              style: const TextStyle(color: Colors.white),
+              dropdownColor: const Color(0xFF1E293B),
               decoration: InputDecoration(
                 labelText: 'Gender',
-                prefixIcon: const Icon(Icons.wc),
-                border: const OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.white70),
+                prefixIcon: const Icon(Icons.wc, color: Colors.white54),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue.shade700),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white12),
+                ),
                 filled: !_editMode,
+                fillColor: !_editMode ? Colors.white10 : null,
               ),
               items: const [
                 DropdownMenuItem(value: 'Male', child: Text('Male')),
@@ -237,20 +280,28 @@ class _ProfilePageState extends State<ProfilePage> {
                   : null,
             ),
             const SizedBox(height: 16),
-            
+
             // Email (read-only)
             TextField(
               enabled: false,
+              style: const TextStyle(color: Colors.white54),
               decoration: InputDecoration(
                 labelText: 'Email',
-                prefixIcon: const Icon(Icons.email),
-                border: const OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.white70),
+                prefixIcon: const Icon(Icons.email, color: Colors.white54),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white12),
+                ),
                 filled: true,
+                fillColor: Colors.white10,
               ),
               controller: TextEditingController(text: email),
             ),
             const SizedBox(height: 32),
-            
+
             // Edit/Save Button
             SizedBox(
               width: double.infinity,
@@ -263,6 +314,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               setState(() => _editMode = false);
                               _fetchProfile();
                             },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white70,
+                              side: const BorderSide(color: Colors.white24),
+                            ),
                             child: const Text('Cancel'),
                           ),
                         ),
@@ -270,28 +325,41 @@ class _ProfilePageState extends State<ProfilePage> {
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _saveProfile,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade700,
+                              foregroundColor: Colors.white,
+                            ),
                             child: const Text('Save'),
                           ),
                         ),
                       ],
                     )
-                  : PrimaryButton(
-                      onPressed: () => setState(() => _editMode = true),
-                      child: const Text('Edit Profile'),
+                  : SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: () => setState(() => _editMode = true),
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: const Text('Edit Profile'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                     ),
             ),
             const SizedBox(height: 16),
-            
+
             // Logout Button
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: OutlinedButton.icon(
                 onPressed: _logout,
                 icon: const Icon(Icons.logout),
                 label: const Text('Logout'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
+                  foregroundColor: Colors.red.shade400,
+                  side: BorderSide(color: Colors.red.shade400),
                 ),
               ),
             ),

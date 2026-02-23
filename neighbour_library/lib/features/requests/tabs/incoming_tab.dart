@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../ui/book_card.dart';
 import '../../../ui/empty_state.dart';
 import '../../chat/chat_page.dart';
+import '../../profile/view_profile_page.dart';
 
 class IncomingTab extends StatefulWidget {
   const IncomingTab({super.key});
@@ -111,54 +112,100 @@ class _IncomingTabState extends State<IncomingTab> {
                 ),
               // BORROWER — pending
               if (status == 'pending' && isBorrower) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatPage(
-                            requestId: r['id'],
-                            otherUserId: r['owner_id'],
-                          ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatPage(
+                                requestId: r['id'],
+                                otherUserId: r['owner_id'],
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.message, size: 16),
+                        label: const Text('Chat'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.message, size: 16),
-                    label: const Text('Chat'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade700,
-                      foregroundColor: Colors.white,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ViewProfilePage(userId: r['owner_id']),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.person, size: 16),
+                        label: const Text('Profile'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 const StatusChip(label: 'Requested', color: Colors.orange),
               ],
               // OWNER — pending
               if (status == 'pending' && isOwner) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatPage(
-                            requestId: r['id'],
-                            otherUserId: r['borrower_id'],
-                          ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatPage(
+                                requestId: r['id'],
+                                otherUserId: r['borrower_id'],
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.message, size: 16),
+                        label: const Text('Chat'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade700,
+                          foregroundColor: Colors.white,
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.message, size: 16),
-                    label: const Text('Chat'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade700,
-                      foregroundColor: Colors.white,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ViewProfilePage(userId: r['borrower_id']),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.person, size: 16),
+                        label: const Text('Profile'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -214,20 +261,6 @@ class _IncomingTabState extends State<IncomingTab> {
         .from('borrow_requests')
         .update({'status': 'rejected'})
         .eq('id', requestId);
-
-    _fetch();
-  }
-
-  Future<void> _confirmReturn(String requestId, String bookId) async {
-    await _client
-        .from('borrow_requests')
-        .update({'status': 'completed'})
-        .eq('id', requestId);
-
-    await _client
-        .from('books')
-        .update({'status': 'available'})
-        .eq('id', bookId);
 
     _fetch();
   }
