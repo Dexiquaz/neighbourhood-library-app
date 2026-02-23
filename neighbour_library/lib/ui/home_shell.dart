@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../features/explore/explore_page.dart';
 import '../features/library/my_library_page.dart';
 import '../features/requests/requests_page.dart';
+import '../features/profile/profile_page.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -17,7 +18,7 @@ class _HomeShellState extends State<HomeShell> {
     ExplorePage(),
     MyLibraryPage(),
     RequestsPage(),
-    Placeholder(), // Profile later
+    ProfilePage(),
   ];
 
   @override

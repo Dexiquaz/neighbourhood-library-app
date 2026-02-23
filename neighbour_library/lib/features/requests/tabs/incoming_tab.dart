@@ -3,6 +3,7 @@ import 'package:neighbour_library/ui/status_chip.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../ui/book_card.dart';
 import '../../../ui/empty_state.dart';
+import '../../chat/chat_page.dart';
 
 class IncomingTab extends StatefulWidget {
   const IncomingTab({super.key});
@@ -28,8 +29,19 @@ class _IncomingTabState extends State<IncomingTab> {
     final data = await _client
         .from('borrow_requests')
         .select('''
-          id, status, owner_id, borrower_id,
-          books ( id, title, author )
+          id,
+          status,
+          owner_id,
+          borrower_id,
+          books (
+            id,
+            title,
+            author
+          ),
+          messages (
+            content,
+            created_at
+          )
         ''')
         .or('owner_id.eq.$userId,borrower_id.eq.$userId')
         .inFilter('status', ['pending', 'returned'])
@@ -61,37 +73,122 @@ class _IncomingTabState extends State<IncomingTab> {
         final book = r['books'];
         final status = r['status'];
 
+        List messages = r['messages'] ?? [];
+
+        Map<String, dynamic>? lastMessage;
+
+        if (messages.isNotEmpty) {
+          messages.sort(
+            (a, b) => DateTime.parse(
+              b['created_at'],
+            ).compareTo(DateTime.parse(a['created_at'])),
+          );
+          lastMessage = messages.first;
+        }
+
         final isOwner = r['owner_id'] == userId;
         final isBorrower = r['borrower_id'] == userId;
 
         return BookCard(
           title: book['title'],
           author: book['author'] ?? '',
-          subtitle: Wrap(
-            spacing: 8,
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (lastMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Last: ${lastMessage['content']}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              // BORROWER — pending
+              if (status == 'pending' && isBorrower) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatPage(
+                            requestId: r['id'],
+                            otherUserId: r['owner_id'],
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.message, size: 16),
+                    label: const Text('Chat'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const StatusChip(label: 'Requested', color: Colors.orange),
+              ],
               // OWNER — pending
               if (status == 'pending' && isOwner) ...[
-                ElevatedButton(
-                  onPressed: () => _approve(r['id'], book['id']),
-                  child: const Text('Approve'),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatPage(
+                            requestId: r['id'],
+                            otherUserId: r['borrower_id'],
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.message, size: 16),
+                    label: const Text('Chat'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
                 ),
-                OutlinedButton(
-                  onPressed: () => _deny(r['id']),
-                  child: const Text('Deny'),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _approve(r['id'], book['id']),
+                        icon: const Icon(Icons.check, size: 16),
+                        label: const Text('Approve'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _deny(r['id']),
+                        icon: const Icon(Icons.close, size: 16),
+                        label: const Text('Deny'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-
-              // BORROWER — pending
-              if (status == 'pending' && isBorrower)
-                const StatusChip(label: 'Request sent', color: Colors.white70),
-
-              // OWNER — returned
-              if (status == 'returned' && isOwner)
-                ElevatedButton(
-                  onPressed: () => _confirmReturn(r['id'], book['id']),
-                  child: const Text('Confirm Return'),
-                ),
             ],
           ),
         );
