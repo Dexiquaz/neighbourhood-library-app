@@ -4,7 +4,6 @@ import '../../ui/app_scaffold.dart';
 import '../../ui/book_card.dart';
 import '../../ui/empty_state.dart';
 import 'add_book_page.dart';
-import '../requests/borrower/my_borrowed_books_page.dart';
 
 class MyLibraryPage extends StatefulWidget {
   const MyLibraryPage({super.key});
@@ -57,42 +56,17 @@ class _MyLibraryPageState extends State<MyLibraryPage> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // 🔑 Borrowed Books Navigation
-                ListTile(
-                  leading: const Icon(Icons.bookmark),
-                  title: const Text('Borrowed Books'),
-                  subtitle: const Text('Books you currently have'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MyBorrowedBooksPage(),
-                      ),
-                    );
-                  },
-                ),
-
-                const Divider(),
-
-                // 🔑 Owned Books List
-                Expanded(
-                  child: _books.isEmpty
-                      ? const EmptyState(message: 'No books in your library')
-                      : ListView.builder(
-                          itemCount: _books.length,
-                          itemBuilder: (context, index) {
-                            final book = _books[index];
-                            return BookCard(
-                              title: book['title'],
-                              author: book['author'] ?? 'Unknown author',
-                            );
-                          },
-                        ),
-                ),
-              ],
+          : _books.isEmpty
+          ? const EmptyState(message: 'No books in your library')
+          : ListView.builder(
+              itemCount: _books.length,
+              itemBuilder: (context, index) {
+                final book = _books[index];
+                return BookCard(
+                  title: book['title'],
+                  author: book['author'] ?? 'Unknown author',
+                );
+              },
             ),
     );
   }

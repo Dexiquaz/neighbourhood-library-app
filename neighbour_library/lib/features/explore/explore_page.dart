@@ -5,6 +5,7 @@ import '../../ui/book_card.dart';
 import '../../ui/empty_state.dart';
 import '../../services/location_service.dart';
 import 'package:geolocator/geolocator.dart';
+import '../profile/view_profile_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -169,15 +170,54 @@ class _ExplorePageState extends State<ExplorePage> {
                         style: const TextStyle(color: Colors.white54),
                       ),
                       const SizedBox(height: 8),
-                      alreadyRequested
-                          ? const Chip(
-                              label: Text('Pending'),
-                              backgroundColor: Colors.orange,
-                            )
-                          : ElevatedButton(
-                              onPressed: () => _requestBorrow(book),
-                              child: const Text('Request Borrow'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ViewProfilePage(
+                                      userId: book['owner_id'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.person, size: 16),
+                              label: const Text('View Profile'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple.shade700,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: alreadyRequested
+                            ? ElevatedButton(
+                                onPressed: null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange.shade700,
+                                  disabledBackgroundColor:
+                                      Colors.orange.shade700,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text('Pending'),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: () => _requestBorrow(book),
+                                icon: const Icon(Icons.send, size: 16),
+                                label: const Text('Request Borrow'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade700,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                      ),
                     ],
                   ),
                 );

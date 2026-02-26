@@ -30,6 +30,10 @@ class _HistoryTabState extends State<HistoryTab> {
         .select('''
           status,
           books ( title, author )
+          messages (
+            content,
+            created_at
+          )
         ''')
         .or('owner_id.eq.$userId,borrower_id.eq.$userId')
         .inFilter('status', ['completed', 'rejected'])
@@ -53,10 +57,47 @@ class _HistoryTabState extends State<HistoryTab> {
         final r = _items[i];
         final book = r['books'];
 
+        List messages = r['messages'] ?? [];
+
+        Map<String, dynamic>? lastMessage;
+
+        if (messages.isNotEmpty) {
+          messages.sort(
+            (a, b) => DateTime.parse(
+              b['created_at'],
+            ).compareTo(DateTime.parse(a['created_at'])),
+          );
+          lastMessage = messages.first;
+        }
+
         return BookCard(
           title: book['title'],
           author: book['author'] ?? '',
-          subtitle: StatusChip(label: r['status'], color: Colors.white70),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (lastMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    'Last: ${lastMessage['content']}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              StatusChip(
+                label: r['status'] == 'completed' ? 'Completed' : 'Rejected',
+                color: r['status'] == 'completed'
+                    ? Colors.green.shade400
+                    : Colors.red.shade400,
+              ),
+            ],
+          ),
         );
       },
     );
