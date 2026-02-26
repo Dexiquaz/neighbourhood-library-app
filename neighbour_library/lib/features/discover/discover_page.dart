@@ -59,6 +59,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
         userId,
         limit: 8,
       );
+      debugPrint(
+        '🎬 Discover: _loadRecommendations returned ${books.length} books',
+      );
       if (mounted) {
         setState(() => _recommendedBooks = books);
       }
@@ -83,6 +86,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
       final books = await _recommendations.getCollaborativeRecommendations(
         userId,
         limit: 6,
+      );
+      debugPrint(
+        '🎬 Discover: _loadCollaborative returned ${books.length} books',
       );
       if (mounted) {
         setState(() => _collaborativeBooks = books);

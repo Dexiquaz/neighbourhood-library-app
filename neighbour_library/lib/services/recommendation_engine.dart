@@ -28,11 +28,8 @@ class RecommendationEngine {
         preferredCondition = userPrefs[0]['preferred_condition'] as String?;
       }
 
-      // Get all available books (not owned by user, not already borrowed pending)
-      final allBooks = await _client
-          .from('books')
-          .select('*')
-          .neq('owner_id', userId);
+      // Get all available books
+      final allBooks = await _client.from('books').select('*');
 
       // Filter out books user is already borrowing
       final userBorrows = await _client
@@ -45,49 +42,51 @@ class RecommendationEngine {
           .map((r) => r['book_id'])
           .toSet();
 
-      // Score each book
-      final scoredBooks = (allBooks as List).map((book) {
-        double score = 0.0;
+      // Score each book (filter owned by user in memory)
+      final scoredBooks = (allBooks as List)
+          .where((book) => book['owner_id'] != userId)
+          .map((book) {
+            double score = 0.0;
 
-        // Genre match scoring
-        if (genreScores != null && genreScores.isNotEmpty) {
-          final genre = book['genre'] as String?;
-          if (genre != null && genreScores.containsKey(genre)) {
-            score += genreScores[genre]! * 40; // Max 40 points
-          } else {
-            score += 5; // Base points if no preference match
-          }
-        } else {
-          score += 10; // Default if no preferences
-        }
+            if (genreScores != null && genreScores.isNotEmpty) {
+              final genre = book['genre'] as String?;
+              if (genre != null && genreScores.containsKey(genre)) {
+                score += genreScores[genre]! * 40; // Max 40 points
+              } else {
+                score += 5; // Base points if no preference match
+              }
+            } else {
+              score += 10; // Default if no preferences
+            }
 
-        // Popularity scoring
-        final borrowCount = (book['borrow_count'] ?? 0) as int;
-        score += (borrowCount / 10).clamp(0, 20); // Max 20 points
+            // Popularity scoring
+            final borrowCount = (book['borrow_count'] ?? 0) as int;
+            score += (borrowCount / 10).clamp(0, 20); // Max 20 points
 
-        // Rating scoring
-        final rating = (book['rating'] as num?)?.toDouble() ?? 0.0;
-        score += (rating / 5.0) * 30; // Max 30 points
+            // Rating scoring
+            final rating = (book['rating'] as num?)?.toDouble() ?? 0.0;
+            score += (rating / 5.0) * 30; // Max 30 points
 
-        // Condition preference
-        final condition = book['condition'] as String?;
-        if (preferredCondition != null && condition == preferredCondition) {
-          score += 10; // Max 10 points
-        }
+            // Condition preference
+            final condition = book['condition'] as String?;
+            if (preferredCondition != null && condition == preferredCondition) {
+              score += 10; // Max 10 points
+            }
 
-        // Recency bonus (books lent recently)
-        final lastBorrowedAt = book['last_borrowed_at'] as String?;
-        if (lastBorrowedAt != null) {
-          final daysAgo = DateTime.now()
-              .difference(DateTime.parse(lastBorrowedAt))
-              .inDays;
-          if (daysAgo < 30) {
-            score += 5;
-          }
-        }
+            // Recency bonus (books lent recently)
+            final lastBorrowedAt = book['last_borrowed_at'] as String?;
+            if (lastBorrowedAt != null) {
+              final daysAgo = DateTime.now()
+                  .difference(DateTime.parse(lastBorrowedAt))
+                  .inDays;
+              if (daysAgo < 30) {
+                score += 5;
+              }
+            }
 
-        return {...book, 'recommendation_score': score};
-      }).toList();
+            return {...book, 'recommendation_score': score};
+          })
+          .toList();
 
       // Filter out books user is already borrowing
       final filtered = scoredBooks
@@ -101,7 +100,10 @@ class RecommendationEngine {
         ),
       );
 
-      return filtered.take(limit).cast<Map<String, dynamic>>().toList();
+      return filtered
+          .take(limit)
+          .map((book) => Map<String, dynamic>.from(book))
+          .toList();
     } catch (e) {
       debugPrint('Error generating recommendations: $e');
       return [];
