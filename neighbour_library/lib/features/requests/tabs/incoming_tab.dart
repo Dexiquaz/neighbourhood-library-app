@@ -3,6 +3,7 @@ import 'package:neighbour_library/ui/status_chip.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../ui/book_card.dart';
 import '../../../ui/empty_state.dart';
+import '../../../services/analytics_service.dart';
 import '../../chat/chat_page.dart';
 import '../../profile/view_profile_page.dart';
 
@@ -15,6 +16,7 @@ class IncomingTab extends StatefulWidget {
 
 class _IncomingTabState extends State<IncomingTab> {
   final _client = Supabase.instance.client;
+  final _analyticsService = AnalyticsService();
   bool _loading = true;
   List<dynamic> _items = [];
 
@@ -246,12 +248,21 @@ class _IncomingTabState extends State<IncomingTab> {
   // ---- Actions ----
 
   Future<void> _approve(String requestId, String bookId) async {
+    final userId = _client.auth.currentUser!.id;
+
     await _client
         .from('borrow_requests')
         .update({'status': 'approved'})
         .eq('id', requestId);
 
     await _client.from('books').update({'status': 'borrowed'}).eq('id', bookId);
+
+    // Log the borrow request approval
+    await _analyticsService.logEvent(
+      userId: userId,
+      bookId: bookId,
+      eventType: 'borrow_request_approved',
+    );
 
     _fetch();
   }
@@ -261,6 +272,13 @@ class _IncomingTabState extends State<IncomingTab> {
         .from('borrow_requests')
         .update({'status': 'rejected'})
         .eq('id', requestId);
+
+    // Log the borrow request denial
+    await _analyticsService.logEvent(
+      userId: _client.auth.currentUser!.id,
+      bookId: null,
+      eventType: 'borrow_request_denied',
+    );
 
     _fetch();
   }

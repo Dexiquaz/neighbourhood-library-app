@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../ui/book_card.dart';
 import '../../../ui/empty_state.dart';
+import '../../../services/analytics_service.dart';
 import '../../chat/chat_page.dart';
 
 class ActiveTab extends StatefulWidget {
@@ -13,6 +14,7 @@ class ActiveTab extends StatefulWidget {
 
 class _ActiveTabState extends State<ActiveTab> {
   final _client = Supabase.instance.client;
+  final _analyticsService = AnalyticsService();
 
   bool _loading = true;
   List<dynamic> _items = [];
@@ -56,10 +58,19 @@ class _ActiveTabState extends State<ActiveTab> {
   }
 
   Future<void> _markReturned(String requestId) async {
+    final userId = _client.auth.currentUser!.id;
+
     await _client
         .from('borrow_requests')
         .update({'status': 'returned'})
         .eq('id', requestId);
+
+    // Log the return event
+    await _analyticsService.logEvent(
+      userId: userId,
+      bookId: null,
+      eventType: 'book_returned',
+    );
 
     if (!mounted) return;
 
@@ -73,6 +84,8 @@ class _ActiveTabState extends State<ActiveTab> {
   }
 
   Future<void> _confirmReturn(String requestId, String bookId) async {
+    final userId = _client.auth.currentUser!.id;
+
     await _client
         .from('borrow_requests')
         .update({'status': 'completed'})
@@ -82,6 +95,21 @@ class _ActiveTabState extends State<ActiveTab> {
         .from('books')
         .update({'status': 'available'})
         .eq('id', bookId);
+
+    // Log the completion event
+    await _analyticsService.logEvent(
+      userId: userId,
+      bookId: bookId,
+      eventType: 'borrow_completed',
+    );
+
+    // Update user preferences based on completed borrow
+    final preferences = await _analyticsService.getUserGenrePreferences(userId);
+    await _analyticsService.updateUserPreferences(
+      userId,
+      preferences,
+      null, // Let the service use its default 'good' condition
+    );
 
     if (!mounted) return;
 

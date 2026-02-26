@@ -3,6 +3,7 @@ import '../features/explore/explore_page.dart';
 import '../features/library/my_library_page.dart';
 import '../features/requests/requests_page.dart';
 import '../features/profile/profile_page.dart';
+import '../features/discover/discover_page.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -16,6 +17,7 @@ class _HomeShellState extends State<HomeShell> {
 
   final _pages = const [
     ExplorePage(),
+    DiscoverPage(),
     MyLibraryPage(),
     RequestsPage(),
     ProfilePage(),
@@ -37,6 +39,10 @@ class _HomeShellState extends State<HomeShell> {
         elevation: 0,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.lightbulb),
+            label: 'Discover',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_books),
             label: 'My Library',

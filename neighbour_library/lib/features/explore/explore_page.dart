@@ -4,6 +4,7 @@ import '../../ui/app_scaffold.dart';
 import '../../ui/book_card.dart';
 import '../../ui/empty_state.dart';
 import '../../services/location_service.dart';
+import '../../services/analytics_service.dart';
 import 'package:geolocator/geolocator.dart';
 import '../profile/view_profile_page.dart';
 
@@ -16,6 +17,7 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   final _client = Supabase.instance.client;
+  final _analyticsService = AnalyticsService();
 
   static const double _radiusKm = 3.0;
 
@@ -29,6 +31,12 @@ class _ExplorePageState extends State<ExplorePage> {
         'owner_id': book['owner_id'],
         'status': 'pending',
       });
+      // Log the borrow request event
+      await _analyticsService.logEvent(
+        userId: userId,
+        bookId: book['id'],
+        eventType: 'borrow_request',
+      );
 
       setState(() {
         _requestedBookIds.add(book['id']);
