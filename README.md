@@ -18,7 +18,7 @@ The system is designed as a **minor academic project**, with a focus on clean ar
 
 ---
 
-## 🧱 Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Flutter**
